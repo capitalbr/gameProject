@@ -1,3 +1,3 @@
 // import "./js/three";
 // import "./js/game";
-import "./js/test";
+import "./js/game_main";

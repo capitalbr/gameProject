@@ -15,6 +15,10 @@ let camera, scene, renderer, controls, raycaster;
 
 //TESTING
 let mainCharacter;
+let clock = new THREE.Clock();
+let mixer;
+let mirrorCube, mirrorCubeCamera; // for mirror material
+let mirrorSphere, mirrorSphereCamera; // for mirror material
 //TESTING
 
 let main
@@ -25,62 +29,64 @@ let right = false;
 let jumpAllow = false;
 
 const characterCreator = () => {
-  // let geo = new THREE.DodecahedronGeometry(0.2, 1);
-  // let mat = new THREE.MeshStandardMaterial({ color: 0xe5f2f2, shading: THREE.FlatShading })
   
-  // mainCharacter = new THREE.Mesh(geo, mat);
+  let loader = new FBXLoader();
+  loader.load('https://assets-yp9dzdxebv.s3.us-east-2.amazonaws.com/Rifle+Run.fbx', (object) => {
+  debugger
+    object.scale.set(.4, .4, .4)
+    mainCharacter = object;
+    mixer = new THREE.AnimationMixer(mainCharacter);
+
+    let action = mixer.clipAction(mainCharacter.animations[0]);
+    action.play();
+
+    mainCharacter.traverse(function (child) {
+
+      if (child.isMesh) {
+
+        child.castShadow = true;
+        child.receiveShadow = true;
+
+      }
+
+    });
+    
+    scene.add(mainCharacter);
+
+  }, undefined, function (error) {
+    debugger
+    console.error(error);
+
+  });;
 
 
+  // mainCharacter = new THREE.Mesh(geometry, material);
+  // mainCharacter.receiveShadow = true;
+  // mainCharacter.castShadow = true;
+  // scene.add(mainCharacter);
+  // debugger
+  // REFLECTIVE OBJECTS SECTION
+  let cubeGeom = new THREE.CubeGeometry(100, 100, 10, 1, 1, 1);
+  mirrorCubeCamera = new THREE.CubeCamera(0.1, 5000, 512);
+  // mirrorCubeCamera.renderTarget.minFilter = THREE.LinearMipMapLinearFilter;
+  scene.add(mirrorCubeCamera);
+  let mirrorCubeMaterial = new THREE.MeshBasicMaterial({ envMap: mirrorCubeCamera.renderTarget });
+  mirrorCube = new THREE.Mesh(cubeGeom, mirrorCubeMaterial);
+  mirrorCube.position.set(-75, 50, 0);
+  // mirrorCubeCamera.position = mirrorCube.position;
+  mirrorCubeCamera.position.set(-75, 50, 0);
+  scene.add(mirrorCube);
 
-  var geometry = new THREE.BoxGeometry(1, 1, 10);
-  THREE.ImageUtils.crossOrigin = '';
-  var texture = THREE.ImageUtils.loadTexture('http://i.imgur.com/CEGihbB.gif');
-  texture.anisotropy = renderer.getMaxAnisotropy();
-
-  var material = new THREE.MeshFaceMaterial([
-    new THREE.MeshBasicMaterial({
-      color: 0x00ff00
-    }),
-    new THREE.MeshBasicMaterial({
-      color: 0xff0000
-    }),
-    new THREE.MeshBasicMaterial({
-      //color: 0x0000ff,
-      map: texture
-    }),
-    new THREE.MeshBasicMaterial({
-      color: 0xffff00
-    }),
-    new THREE.MeshBasicMaterial({
-      color: 0x00ffff
-    }),
-    new THREE.MeshBasicMaterial({
-      color: 0xff00ff
-    })
-  ]);
-
-
-  mainCharacter = new THREE.Mesh(geometry, material);
-
-
-  
-  
-  
-  
-  
-  mainCharacter.receiveShadow = true;
-  mainCharacter.castShadow = true;
-  scene.add(mainCharacter);
-
-  // not being used
-  // mainCharacter.position.x = 3;
-  // mainCharacter.rotation.x = Math.PI / 4;
-  // mainCharacter.rotation.y = Math.PI / 4;
-
-  // mainCharacter.position.y = 10;
-  // mainCharacter.position.x = 3;
-  // mainCharacter.position.z = 3;
-
+  let sphereGeom = new THREE.SphereGeometry(50, 32, 16); // radius, segmentsWidth, segmentsHeight
+  mirrorSphereCamera = new THREE.CubeCamera(0.1, 5000, 512);
+  // mirrorCubeCamera.renderTarget.minFilter = THREE.LinearMipMapLinearFilter;
+  scene.add(mirrorSphereCamera);
+  let mirrorSphereMaterial = new THREE.MeshBasicMaterial({ envMap: mirrorSphereCamera.renderTarget });
+  mirrorSphere = new THREE.Mesh(sphereGeom, mirrorSphereMaterial);
+  mirrorSphere.position.set(75, 50, 0);
+  // mirrorSphereCamera.position = mirrorSphere.position;
+  mirrorSphereCamera.position.set(75, 50, 0);
+  scene.add(mirrorSphere);
 
 }
 
@@ -94,10 +100,19 @@ characterCreator();
 
 animate();
 
+// ATTEMPTS AT THIRD PERSON
+// controls.add(mainCharacter)
+// mainCharacter.add(controls);
+// camera.lookAt(mainCharacter.position);
+// let v = new THREE.Vector3();
+// v.copy(camera.position);
+// camera.localToWorld(v);
+// mainCharacter.worldToLocal(v);
+
 function init() {
 
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
-  camera.position.y = 10;
+  camera.position.y = 40;
 
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0xffffff);
@@ -280,20 +295,28 @@ function animate() {
     controls.getObject().position.y += (velocity.y * delta); // new behavior
     controls.getObject().translateZ(velocity.z * delta);
 
+    // steven tip
     // mainCharacter.position.x += velocity.x * delta;
     // mainCharacter.position.y += velocity.y * delta;
     // mainCharacter.position.z += velocity.z * delta;
-
-    mainCharacter.position.x = controls.getObject().position.x;
+    
+    
+    // working
+    mainCharacter.position.x = controls.getObject().position.x - 10;
     mainCharacter.position.y = controls.getObject().position.y -1.5;
-    mainCharacter.position.z = controls.getObject().position.z;
+    mainCharacter.position.z = controls.getObject().position.z -100;
 
+    // mainCharacter.bodyOrientation = 180;
+    // let mcq = mainCharacter.quaternion.w;
+    
     mainCharacter.quaternion.set(camera.quaternion.x, camera.quaternion.y, camera.quaternion.z, camera.quaternion.w);
+    mainCharacter.rotateY(110);
 
-    if (controls.getObject().position.y < 10) {
+
+    if (controls.getObject().position.y < 100) {
 
       velocity.y = 0;
-      controls.getObject().position.y = 10;
+      controls.getObject().position.y = 100;
 
       // TESTING
       mainCharacter.position.y = 10 -1.5;
@@ -312,7 +335,23 @@ function animate() {
    
   }
 
+  let delta2 = clock.getDelta();
 
+  if (mixer) mixer.update(delta2);
+
+
+  // REFLECTIVE OBJECTS
+  mirrorCube.visible = false;
+  mirrorCubeCamera.updateCubeMap(renderer, scene);
+  mirrorCube.visible = true;
+
+  mirrorSphere.visible = false;
+  mirrorSphereCamera.updateCubeMap(renderer, scene);
+  mirrorSphere.visible = true;
+  // END REFLECTIVE OBJECTS
+
+
+  // renderer.render(scene, camera);
   renderer.render(scene, camera);
 
 }
