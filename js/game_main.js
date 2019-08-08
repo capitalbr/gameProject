@@ -27,6 +27,8 @@ let mirrorSphere, mirrorSphereCamera; // for mirror material
 const characters = {};
 let currentCharacter;
 let prevCharacter;
+
+let action;
 //TESTING
 
 let main
@@ -55,6 +57,7 @@ const characterCreator = () => {
     
     
     mainCharacter = gltf;
+    mainCharacter.scene.scale.set(3, 3, 3);
     mainCharacter.aHash = {};
     mainCharacter.animations.forEach(a => {
       if (
@@ -309,7 +312,7 @@ animate();
 function init() {
 
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
-  camera.position.y = 40;
+  camera.position.y = 240;
 
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0xffffff);
@@ -352,22 +355,22 @@ function init() {
 
       case 87: // w
         forward = true;
-        currentCharacter = mainCharacter;
+        
         break;
 
       case 65: // a
         left = true;
-        currentCharacter = mainCharacterStrafe1;
+       
         break;
 
       case 83: // s
         back = true;
-        currentCharacter = mainCharacterRunBackwards;
+        
         break;
 
       case 68: // d
         right = true;
-        currentCharacter = mainCharacterStrafe2;
+        
         break;
 
       case 32: // space
@@ -385,22 +388,22 @@ function init() {
 
       case 87: // w
         forward = false;
-        currentCharacter = mainCharacterStandStill;
+       
         break;
 
       case 65: // a
         left = false;
-        currentCharacter = mainCharacterStandStill;
+        
         break;
 
       case 83: // s
         back = false;
-        currentCharacter = mainCharacterStandStill;
+        
         break;
 
       case 68: // d
         right = false;
-        currentCharacter = mainCharacterStandStill;
+        
         break;
 
     }
@@ -472,6 +475,29 @@ function onWindowResize() {
 
 }
 
+const playClip = (clip) => {
+  //  if (count < 0){
+  //    debugger
+  //    count = 300;
+  //  }
+  //   count -= 1;
+ 
+  // if (mixer._actions[0] && mixer._actions[0]._clip.name !== clip){
+    
+  // }
+  
+  if (action && action._clip.name !== clip) {
+    action.enabled = false;
+    action = mixer.clipAction(mainCharacter.aHash[clip]);
+    action.play();
+  } else {
+    action = mixer.clipAction(mainCharacter.aHash[clip]);
+    action.enabled = true;
+    action.play();
+  }
+  
+}
+
 function animate() {
 
   requestAnimationFrame(animate);
@@ -497,136 +523,46 @@ function animate() {
     if (left || right) velocity.x -= direction.x * 400.0 * delta;
 
     controls.getObject().translateX(velocity.x * delta);
-    controls.getObject().position.y += (velocity.y * delta); // new behavior
+    controls.getObject().position.y += (velocity.y * delta);
     controls.getObject().translateZ(velocity.z * delta);
     
-    // switch (currentCharacter) {
-    //   case mainCharacter:
-    //     if (!scene.getObjectByName(mainCharacter)) {
-    //       deleteObAddOb(prevCharacter, currentCharacter);
-    //     }
-    //     break;
-    //   case mainCharacterRunBackwards:
-    //     if (!scene.getObjectByName(mainCharacterRunBackwards)) {
-    //       deleteObAddOb(prevCharacter, currentCharacter);
-    //     }
-    //     break;
-    //   case mainCharacterStandStill:
-    //     if (!scene.getObjectByName(mainCharacterStandStill)) {
-    //       deleteObAddOb(prevCharacter, currentCharacter);
-    //     }
-    //     break;
-    //   case mainCharacterStrafe1:
-    //     if (!scene.getObjectByName(mainCharacterStrafe1)) {
-    //       deleteObAddOb(prevCharacter, currentCharacter);
-    //     }
-    //     break;
-    //   case mainCharacterStrafe2:
-    //     if (!scene.getObjectByName(mainCharacterStrafe2)) {
-    //       deleteObAddOb(prevCharacter, currentCharacter);
-    //     }
-    //     break;
-    //   default:
-    //     // if (!scene.getObjectByName(mainCharacterStandStill)) {
-    //     //   scene.add(mainCharacterStandStill);
-    //     // }
-    //     break;
-    // }
-  
-    
-
-
-
-    // steven tip
-    // mainCharacter.position.x += velocity.x * delta;
-    // mainCharacter.position.y += velocity.y * delta;
-    // mainCharacter.position.z += velocity.z * delta;
-    
-    
-    // working
-
-    
     if (mainCharacter) {
-      // debugger
+   
+      let mType = "idle";
+      if (forward) mType = {type: "forward"};
+      if (left) mType = {type: "left"};
+      if (right) mType = {type: "right"};
+      if (back) mType = {type: "back"}; 
+      switch (mType.type) {
+        case "forward":
+          playClip("Run");
+          break;
+        case "back":
+          playClip("RunBackwards");
+          break;
+        default:
+          playClip("GunPlay")
+      }
+
       mainCharacter.scene.position.x = controls.getObject().position.x - 10;
-      mainCharacter.scene.position.y = controls.getObject().position.y -1.5;
-      mainCharacter.scene.position.z = controls.getObject().position.z -1;
+      mainCharacter.scene.position.y = controls.getObject().position.y;
+      mainCharacter.scene.position.z = controls.getObject().position.z -0.2;
       
       mainCharacter.scene.quaternion.set(camera.quaternion.x, camera.quaternion.y, camera.quaternion.z, camera.quaternion.w);
       mainCharacter.scene.rotateY(110);
     }
-    
-    if (mainCharacterRunBackwards) {
-      mainCharacterRunBackwards.position.x = controls.getObject().position.x - 10;
-      mainCharacterRunBackwards.position.y = controls.getObject().position.y - 1.5;
-      mainCharacterRunBackwards.position.z = controls.getObject().position.z - 100;
-      
-      mainCharacterRunBackwards.quaternion.set(camera.quaternion.x, camera.quaternion.y, camera.quaternion.z, camera.quaternion.w);
-      mainCharacterRunBackwards.rotateY(110);
-    }
-
-    if (mainCharacterGun) {
-      mainCharacterGun.position.x = controls.getObject().position.x - 10;
-      mainCharacterGun.position.y = controls.getObject().position.y - 1.5;
-      mainCharacterGun.position.z = controls.getObject().position.z - 100;
-      
-      mainCharacterGun.quaternion.set(camera.quaternion.x, camera.quaternion.y, camera.quaternion.z, camera.quaternion.w);
-      mainCharacterGun.rotateY(110);
-    }
-
-    if (mainCharacterStandStill) {
-      mainCharacterStandStill.position.x = controls.getObject().position.x - 10;
-      mainCharacterStandStill.position.y = controls.getObject().position.y - 1.5;
-      mainCharacterStandStill.position.z = controls.getObject().position.z - 500;
-      
-      mainCharacterStandStill.quaternion.set(camera.quaternion.x, camera.quaternion.y, camera.quaternion.z, camera.quaternion.w);
-      mainCharacterStandStill.rotateY(110);
-    }
-
-    if (mainCharacterStrafe1) {
-      
-      mainCharacterStrafe1.position.x = controls.getObject().position.x - 10;
-      mainCharacterStrafe1.position.y = controls.getObject().position.y - 1.5;
-      mainCharacterStrafe1.position.z = controls.getObject().position.z - 100;
-      
-      mainCharacterStrafe1.quaternion.set(camera.quaternion.x, camera.quaternion.y, camera.quaternion.z, camera.quaternion.w);
-      mainCharacterStrafe1.rotateY(110);
-    }
-
-    if (mainCharacterStrafe2) {
-      mainCharacterStrafe2.position.x = controls.getObject().position.x - 10;
-      mainCharacterStrafe2.position.y = controls.getObject().position.y - 1.5;
-      mainCharacterStrafe2.position.z = controls.getObject().position.z - 100;
-      
-      mainCharacterStrafe2.quaternion.set(camera.quaternion.x, camera.quaternion.y, camera.quaternion.z, camera.quaternion.w);
-      mainCharacterStrafe2.rotateY(110);
-    }
-
-
     // mainCharacter.bodyOrientation = 180;
     // let mcq = mainCharacter.quaternion.w;
 
 
-    if (controls.getObject().position.y < 10) {
+    if (controls.getObject().position.y < 20) {
 
       velocity.y = 0;
-      controls.getObject().position.y = 10;
-
-      // TESTING
+      controls.getObject().position.y = 20;
+      
       if (mainCharacter) {
-        mainCharacter.scene.position.y = 10 - 1.5;
-      } else if (mainCharacterRunBackwards) {
-        mainCharacterRunBackwards.position.y = 10 - 1.5;
-      } else if (mainCharacterGun) {
-        mainCharacterGun.position.y = 10 - 1.5;
-      } else if (mainCharacterStrafe1) {
-        mainCharacterStrafe1.position.y = 10 - 1.5;
-      } else if (mainCharacterStrafe2) {
-        mainCharacterStrafe2.position.y = 10 - 1.5;
-      } else if (mainCharacterStandStill) {
-        mainCharacterStandStill.position.y = 10 -1.5;
-      }
-      // TESTING
+        mainCharacter.scene.position.y = 5;
+      } 
 
       jumpAllow = true;
 
@@ -634,11 +570,7 @@ function animate() {
 
     lastTime = time;
     
-    // if (count < 0){
-    //   debugger
-    //   count = 500;
-    // }
-    //   count -= 1
+    
    
   }
 
