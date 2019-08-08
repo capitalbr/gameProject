@@ -29,6 +29,7 @@ let currentCharacter;
 let prevCharacter;
 
 let action;
+let mouseDown = false;
 //TESTING
 
 let main
@@ -476,15 +477,6 @@ function onWindowResize() {
 }
 
 const playClip = (clip) => {
-  //  if (count < 0){
-  //    debugger
-  //    count = 300;
-  //  }
-  //   count -= 1;
- 
-  // if (mixer._actions[0] && mixer._actions[0]._clip.name !== clip){
-    
-  // }
   
   if (action && action._clip.name !== clip) {
     action.enabled = false;
@@ -497,6 +489,15 @@ const playClip = (clip) => {
   }
   
 }
+
+
+document.body.onmousedown = function () {
+  mouseDown = true;
+}
+document.body.onmouseup = function () {
+ mouseDown = false;
+}
+
 
 function animate() {
 
@@ -540,8 +541,19 @@ function animate() {
         case "back":
           playClip("RunBackwards");
           break;
+        case "left":
+          playClip("StrafeLeft");
+          break;
+        case "right":
+          playClip("Strafe2");
+          break;
         default:
-          playClip("GunPlay")
+          if (mouseDown) {
+            playClip("GunPlay")
+          } else {
+            playClip("Idle")
+          }
+
       }
 
       mainCharacter.scene.position.x = controls.getObject().position.x - 10;
