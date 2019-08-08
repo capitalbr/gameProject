@@ -48,14 +48,27 @@ const deleteObAddOb = (name, ObToAdd) => {
 
 const characterCreator = () => {
  
-  let loader = new GLTFLoader().setPath('https://assets-yp9dzdxebv.s3.us-east-2.amazonaws.com/');
   // let loader = new GLTFLoader();
+  // loader.load('https://assets-yp9dzdxebv.s3.us-east-2.amazonaws.com/mainCharWorkingReadyForExportWithNLH.glb', function (gltf) {
+  let loader = new GLTFLoader().setPath('https://assets-yp9dzdxebv.s3.us-east-2.amazonaws.com/');
   loader.load('mainCharWorkingReadyForExportWithNLH.glb', function (gltf) {
-    // debugger
-    // gltf.scene.scale.set(.4, .4, .4);  
+    
+    
     mainCharacter = gltf;
+    mainCharacter.aHash = {};
+    mainCharacter.animations.forEach(a => {
+      if (
+      a.name === "TPose" || a.name === "Strafe2" || a.name === "RunBackwards" ||
+      a.name === "Idle" || a.name === "StrafeLeft" || a.name === "Run" ||
+      a.name === "GunPlay"
+      ) {
+        mainCharacter.aHash[a.name] = a;
+      }
+
+    });
+
     mixer = new THREE.AnimationMixer(mainCharacter.scene);
-    let action = mixer.clipAction(mainCharacter.animations[0]);
+    let action = mixer.clipAction(mainCharacter.aHash.Idle);
     action.play();
     
     mainCharacter.scene.traverse(function (child) {
@@ -67,7 +80,7 @@ const characterCreator = () => {
       }
 
     });
-    characters.mainCharacter = mainCharacter;
+    // characters.mainCharacter = mainCharacter;
     scene.add(mainCharacter.scene);
 
   }, undefined, function (error) {
