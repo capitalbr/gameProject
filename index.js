@@ -1,3 +1,6 @@
-// import "./js/three";
+// import "./js/game_main";
+
+
+// TESTING
 // import "./js/game";
-import "./js/game_main";
+import "./testing_terrain";
