@@ -1,6 +1,6 @@
-// import "./js/game_main";
+import "./js/game_main";
 
 
 // TESTING
 // import "./js/game";
-import "./testing_terrain";
+// import "./testing_terrain";

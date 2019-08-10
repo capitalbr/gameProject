@@ -30,6 +30,9 @@ let prevCharacter;
 
 let action;
 let mouseDown = false;
+
+let cameraHolder;
+let axis;
 //TESTING
 
 let main
@@ -85,6 +88,36 @@ const characterCreator = () => {
 
     });
     // characters.mainCharacter = mainCharacter;
+    // camera.lookAt(mainCharacter.scene);
+
+     // POINTERLOCK
+    // controls = new PointerLockControls(camera);
+
+    // let instructions = document.getElementById('instructions');
+
+    // document.addEventListener('click', function () {
+
+    //   controls.lock();
+
+    // });
+
+    // scene.add(controls.getObject());
+  // END POINTERLOCK
+
+
+    
+    cameraHolder.position.set(0, 0, -20);
+    axis = new THREE.Vector3(mainCharacter.scene.position.x, mainCharacter.scene.position.y, mainCharacter.scene.position.z);
+    // cameraHolder.rotateOnAxis(axis, 0.1);
+    camera.position.set(0, 10, 0);
+    cameraHolder.add(camera);
+    cameraHolder.lookAt(scene.position);
+    // cameraHolder.rotateY(110);
+    camera.rotateY(110);
+    scene.add(cameraHolder);
+    // camera.rotateOnAxis(mainCharacter.scene.position, 1);
+    mainCharacter.scene.position.set(0, 0, 0);
+    mainCharacter.scene.add(cameraHolder);
     scene.add(mainCharacter.scene);
 
   }, undefined, function (error) {
@@ -299,7 +332,11 @@ init();
 characterCreator();
 //TESTING
 
-animate();
+document.addEventListener("DOMContentLoaded", function (event) {
+  //do work
+  animate();
+});
+
 
 // ATTEMPTS AT THIRD PERSON
 // controls.add(mainCharacter)
@@ -314,6 +351,8 @@ function init() {
 
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
   camera.position.y = 240;
+  cameraHolder = new THREE.Object3D();
+  cameraHolder.add(camera)
 
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0xffffff);
@@ -322,17 +361,18 @@ function init() {
   let light = new THREE.HemisphereLight(0xeeeeff, 0x777788, 0.75);
   light.position.set(0.5, 1, 0.75);
   scene.add(light);
-
-  controls = new PointerLockControls(camera);
-
   let game = document.getElementById('game');
+
+  // POINTERLOCK
+  // controls = new PointerLockControls(camera);
+
   // let instructions = document.getElementById('instructions');
 
-  document.addEventListener('click', function () {
+  // document.addEventListener('click', function () {
 
-    controls.lock();
+  //   controls.lock();
 
-  });
+  // });
 
   // controls.addEventListener('lock', function () {
 
@@ -348,7 +388,8 @@ function init() {
 
   // });
 
-  scene.add(controls.getObject());
+  // scene.add(controls.getObject());
+  // END POINTERLOCK
 
   let onKeyDown = function (e) {
     
@@ -503,10 +544,10 @@ function animate() {
 
   requestAnimationFrame(animate);
 
-  if (controls.isLocked === true) {
+  // if (controls.isLocked === true) {
 
-    raycaster.ray.origin.copy(controls.getObject().position);
-    raycaster.ray.origin.y -= 10;
+    // raycaster.ray.origin.copy(controls.getObject().position);
+    // raycaster.ray.origin.y -= 10;
 
     let time = performance.now();
     let delta = (time - lastTime) / 1000;
@@ -523,11 +564,17 @@ function animate() {
     if (forward || back) velocity.z -= direction.z * 400.0 * delta;
     if (left || right) velocity.x -= direction.x * 400.0 * delta;
 
-    controls.getObject().translateX(velocity.x * delta);
-    controls.getObject().position.y += (velocity.y * delta);
-    controls.getObject().translateZ(velocity.z * delta);
+    // controls.getObject().translateX(velocity.x * delta);
+    // controls.getObject().position.y += (velocity.y * delta);
+    // controls.getObject().translateZ(velocity.z * delta);
+    // debugger
+    // mainCharacter.scene.translateX(velocity.x * delta);
     
     if (mainCharacter) {
+      
+      mainCharacter.scene.rotation.y += ((velocity.x * delta)/ 10) * -1;
+      mainCharacter.scene.position.y += (velocity.y * delta);
+      mainCharacter.scene.translateZ(velocity.z * delta * -1);
    
       let mType = "idle";
       if (forward) mType = {type: "forward"};
@@ -556,25 +603,25 @@ function animate() {
 
       }
 
-      mainCharacter.scene.position.x = controls.getObject().position.x - 10;
-      mainCharacter.scene.position.y = controls.getObject().position.y;
-      mainCharacter.scene.position.z = controls.getObject().position.z -0.2;
+      // mainCharacter.scene.position.x = controls.getObject().position.x - 10;
+      // mainCharacter.scene.position.y = controls.getObject().position.y;
+      // mainCharacter.scene.position.z = controls.getObject().position.z -0.2;
       
-      mainCharacter.scene.quaternion.set(camera.quaternion.x, camera.quaternion.y, camera.quaternion.z, camera.quaternion.w);
-      mainCharacter.scene.rotateY(110);
+      // mainCharacter.scene.quaternion.set(camera.quaternion.x, camera.quaternion.y, camera.quaternion.z, camera.quaternion.w);
+      // mainCharacter.scene.rotateY(110);
     }
     // mainCharacter.bodyOrientation = 180;
     // let mcq = mainCharacter.quaternion.w;
 
 
-    if (controls.getObject().position.y < 20) {
+    if (mainCharacter.scene.position.y < 0) {
 
       velocity.y = 0;
-      controls.getObject().position.y = 20;
+      mainCharacter.scene.position.y = 0;
       
-      if (mainCharacter) {
-        mainCharacter.scene.position.y = 5;
-      } 
+      // if (mainCharacter) {
+      //   mainCharacter.scene.position.y = 5;
+      // } 
 
       jumpAllow = true;
 
@@ -584,7 +631,7 @@ function animate() {
     
     
    
-  }
+  // }
 
   let delta2 = clock.getDelta();
 
@@ -607,3 +654,51 @@ function animate() {
 
 }
 
+
+ // ALTERNATIVE POINTER ROTATE OBJECT
+ // HAS TWO METHODS NOW ONE FOR CAMERA ROTATION NOT FINISHED
+  // let pmp = {
+  //     x: 0,
+  //     y: 0
+  //   };
+  // let client = {
+  //   x: 0
+  // };
+  // const convertToRadians = (angle) => {
+  //   return angle * (Math.PI / 180);
+  // }
+  // document.onmousemove = (e) => {
+  //   // debugger
+  //   let dMove = {
+  //     x: e.offsetX - pmp.x,
+  //     y: e.offsetY - pmp.y
+  //   };
+    
+
+  //   let drq = new THREE.Quaternion()
+  //     .setFromEuler(new THREE.Euler(
+  //       convertToRadians(dMove.y * -1), 
+  //       convertToRadians(dMove.x * -1),
+  //       0,
+  //       'XYZ'
+  //     ));
+  //   let euler = new THREE.Euler(
+  //     convertTo
+  //   )
+  //   // cameraHolder.quaternion.multiplyQuaternions(drq, cameraHolder.quaternion);
+  //   // if (client.x > e.clientX){
+  //   //   cameraHolder.rotation.y += .03;
+  //   // } else {
+  //   //   cameraHolder.rotation.y -= .03;
+  //   // }
+  //   // cameraHolder.quaternion.set(mainCharacter.scene.quaternion.x, mainCharacter.scene.quaternion.y, mainCharacter.scene.quaternion.z, mainCharacter.scene.quaternion.w);
+  //   // cameraHolder.rotation.set(mainCharacter.scene.rotation.x, mainCharacter.scene.rotation.y, mainCharacter.scene.rotation.z);
+
+  //   pmp = {
+  //     x: e.offsetX,
+  //     y: e.offsetY
+  //   };
+  //   client = {
+  //     x: e.clientX
+  //   }
+  // };
