@@ -116,13 +116,14 @@ function getShootDir(targetVec) {
   targetVec.copy(ray.direction);
 }
 
-window.addEventListener("click", function (e) {
+// window.addEventListener("click", function (e) {
+const handleShoot = (e) => {
   // if (controls.enabled == true) {
     var x = sphereBody.position.x;
     var y = sphereBody.position.y;
     var z = sphereBody.position.z;
     console.log(`xyx ${x}, ${y}, ${z}`)
-    this.console.log(`mainCharacter ${mainCharacter.scene.position.x}, ${mainCharacter.scene.position.y}, ${mainCharacter.scene.position.z}`)
+    console.log(`mainCharacter ${mainCharacter.scene.position.x}, ${mainCharacter.scene.position.y}, ${mainCharacter.scene.position.z}`)
     var ballBody = new CANNON.Body({ mass: 0.00000000000000001 });
     ballBody.addShape(ballShape);
     var randomColor = '#' + (Math.random() * 0xFFFFFF << 0).toString(16);
@@ -135,7 +136,7 @@ window.addEventListener("click", function (e) {
     balls.push(ballBody);
     ballMeshes.push(ballMesh);
     getShootDir(shootDirection);
-    this.console.log(shootDirection);
+    console.log(shootDirection);
     ballBody.velocity.set(shootDirection.x * shootVelo,
       shootDirection.y * shootVelo,
       shootDirection.z * shootVelo);
@@ -147,7 +148,8 @@ window.addEventListener("click", function (e) {
     ballBody.position.set(x, y, z);
     ballMesh.position.set(x, y, z);
   // }
-});
+}
+// });
 
 //END SHOOTING
 
@@ -505,7 +507,7 @@ function init() {
   // scene.add(controls.getObject());
   // END POINTERLOCK
 
-  let onKeyDown = function (e) {
+  let onKeyDown = function (e, mainCharacter) {
     
     switch (e.keyCode) {
 
@@ -534,6 +536,10 @@ function init() {
         break;
       case  39:
         strafeR = true;
+
+        break;
+      case 38:
+        handleShoot(e);
 
         break;
       case 32: // space
@@ -580,7 +586,7 @@ function init() {
 
   };
 
-  document.addEventListener('keydown', onKeyDown, false);
+  document.addEventListener('keydown', (e, mainCharacter) => onKeyDown(e, mainCharacter), false);
   document.addEventListener('keyup', onKeyUp, false);
 
   raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, - 1, 0), 0, 10);
