@@ -1,6 +1,7 @@
 
 import dep from "./import"
 const { THREE, CANNON, PointerLockControls, GLTFLoader } = dep;
+let cannonDebugRenderer;
 let count = 5
 
 let lastTime = performance.now();
@@ -41,17 +42,19 @@ let jumpAllow = false;
 
 //SHOOTING
 let mCharacterShell;
+let eMechShell;
 let world;
 let Material;
-let mass = 5, radius = 1.2;
+let mass = 5, radius = 3.2;
 let MCShellBody = new CANNON.Body({ mass: mass });
+let EMechShellBody = new CANNON.Body({ mass: mass });
 let x, y, z;
 let projectiles = [];
 let projectileMaterial;
 let projectileMeshes = [], boxes = [], boxMeshes = [];
 let dt = 1 / 60;
-// let projectileShape = new CANNON.Sphere(0.2);
-let projectileShape = new CANNON.Sphere(10.2);
+let projectileShape = new CANNON.Sphere(1.2);
+// let projectileShape = new CANNON.Sphere(10.2);
 let projectileGeometry = new THREE.SphereGeometry(projectileShape.radius, 32, 32);
 let currentAimDirection = new THREE.Vector3();
 let projectileVelocity = 750;
@@ -63,12 +66,11 @@ let colorVariation;
 let energyBlast, eBlastAttrs;
 // let particleTexture = THREE.ImageUtils.loadTexture('https://assets-yp9dzdxebv.s3.us-east-2.amazonaws.com/energyBlast.png');
 let particleTexture = new THREE.TextureLoader().load('https://assets-yp9dzdxebv.s3.us-east-2.amazonaws.com/energyBlast.png');
-
 //END PARTICLES
 
-//PARTICLES
-
-//END PARTICLES
+//ENEMIES
+let enemyMech;
+//END ENEMIES
 
 
 
@@ -99,6 +101,13 @@ function initCannon(mainCharacter) {
   MCShellBody.linearDamping = 0.9;
   world.add(MCShellBody);
 
+  eMechShell = new CANNON.Sphere(radius * 3);
+  EMechShellBody.addShape(eMechShell);
+  EMechShellBody.position.set(enemyMech.scene.position.x, enemyMech.scene.position.y, enemyMech.scene.position.z);
+  EMechShellBody.linearDamping = 0.9;
+  world.add(EMechShellBody);
+
+  cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
 
 
   mainCharacter.scene.add(mCGun.scene);
@@ -122,8 +131,6 @@ const handleShoot = (e) => {
   let projectileBody = new CANNON.Body({ mass: 0.00000000000000001 });
   let energyBlast = new THREE.Object3D();
   // colorVariation = '#' + (Math.random() * 0xFFFFFF << 0).toString(16);
-  // projectileMaterial = new THREE.MeshPhongMaterial({ color: colorVariation });
-  // let energyBlast = new THREE.Mesh(projectileGeometry, projectileMaterial);
   console.log(`xyx ${x}, ${y}, ${z}`)
   console.log(`mainCharacter ${mainCharacter.scene.position.x}, ${mainCharacter.scene.position.y}, ${mainCharacter.scene.position.z}`)
   
@@ -157,7 +164,7 @@ const handleShoot = (e) => {
   projectiles.push(projectileBody);
   projectileMeshes.push(energyBlast);
   
-  if (projectiles.length > 12) {
+  if (projectiles.length > 5) {
     world.remove(projectiles.shift());
     scene.remove(projectileMeshes.shift());
   }
@@ -259,6 +266,22 @@ const characterCreator = () => {
 
   });
   
+  let loader3 = new GLTFLoader().setPath('https://assets-yp9dzdxebv.s3.us-east-2.amazonaws.com/');
+  loader3.load('Neck_Mech_Walker_by_3DHaupt-(FBX+7.4+binary+mit+Animation).glb', function (gltf) {
+    enemyMech = gltf;
+    enemyMech.scene.scale.set(2, 2, 2);
+    // enemyMech.scene.rotateY(4.7);
+    enemyMech.scene.position.set(0, 0, -20);
+    scene.add(enemyMech.scene);
+    debugger
+
+  }, undefined, function (error) {
+
+    console.error(error);
+
+  });
+
+
 
   // REFLECTIVE OBJECTS SECTION
   let cubeGeom = new THREE.CubeGeometry(100, 100, 10, 1, 1, 1);
@@ -286,6 +309,7 @@ const characterCreator = () => {
 
 init();
 characterCreator();
+
 
 
 document.addEventListener("DOMContentLoaded", function (event) {
@@ -538,9 +562,7 @@ function animate() {
       MCShellBody.position.y = mainCharacter.scene.position.y + 10;
       MCShellBody.position.z = mainCharacter.scene.position.z;
 
-      // mCGun.scene.position.x = mainCharacter.scene.position.x;
-      // mCGun.scene.position.y = mainCharacter.scene.position.y + 10;
-      // mCGun.scene.position.z = mainCharacter.scene.position.z;
+      
       
    
       let mType = "idle";
@@ -602,6 +624,12 @@ function animate() {
 
     }
 
+    if (enemyMech) {
+      EMechShellBody.position.x = enemyMech.scene.position.x;
+      EMechShellBody.position.y = enemyMech.scene.position.y + 10;
+      EMechShellBody.position.z = enemyMech.scene.position.z;
+    }
+
     lastTime = time;
     
     
@@ -636,7 +664,7 @@ function animate() {
   //END CANNON
 
 
-
+  cannonDebugRenderer.update();
   // renderer.render(scene, camera);
   renderer.render(scene, camera);
 }
