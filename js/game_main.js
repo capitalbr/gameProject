@@ -12,7 +12,7 @@ let velocity2 = new THREE.Vector3();
 let camera, scene, renderer, controls, raycaster;
 
 //TESTING
-let mainCharacter, mainCharacterRunBackwards, mainCharacterStandStill;
+let mainCharacter, mainCharacterRunBackwards, mainCharacterStandStill, mCGun;
 let mainCharacterStrafe1, mainCharacterStrafe2, mainCharacterGun;
 let clock = new THREE.Clock();
 let mixer, mixerMCRun, mixerMCSS, mixerS1, mixerS2, mixerG;
@@ -43,7 +43,7 @@ let jumpAllow = false;
 let mCharacterShell;
 let world;
 let Material;
-let mass = 5, radius = 1.3;
+let mass = 5, radius = 1.2;
 let MCShellBody = new CANNON.Body({ mass: mass });
 let x, y, z;
 let projectiles = [];
@@ -98,6 +98,10 @@ function initCannon(mainCharacter) {
   MCShellBody.position.set(mainCharacter.scene.position.x, mainCharacter.scene.position.y, mainCharacter.scene.position.z);
   MCShellBody.linearDamping = 0.9;
   world.add(MCShellBody);
+
+
+
+  mainCharacter.scene.add(mCGun.scene);
 }
 
  
@@ -169,12 +173,6 @@ const handleShoot = (e) => {
   z += currentAimDirection.z * (mCharacterShell.radius * 1.02 + projectileShape.radius);
   projectileBody.position.set(x, y, z);
   energyBlast.position.set(x, y, z);
-  // debugger
-  // if (count < 0) {
-  //   debugger
-  //   count = 5;
-  // }
-  // count -= 1
 }
 
 
@@ -225,10 +223,10 @@ const characterCreator = () => {
 
     });
     
-    cameraHolder.position.set(0, 0, -7);
+    cameraHolder.position.set(0, 0, -7.5);
     axis = new THREE.Vector3(mainCharacter.scene.position.x, mainCharacter.scene.position.y, mainCharacter.scene.position.z);
     
-    camera.position.set(0, 4, 0);
+    camera.position.set(0, 5.5, 0);
     cameraHolder.add(camera);
     cameraHolder.lookAt(scene.position);
    
@@ -243,6 +241,21 @@ const characterCreator = () => {
   }, undefined, function (error) {
 
      console.error(error);
+
+  });
+  let loader2 = new GLTFLoader().setPath('https://assets-yp9dzdxebv.s3.us-east-2.amazonaws.com/');
+  loader.load('rifle+futuristic+suppressed.glb', function (gltf) {
+    mCGun = gltf;
+    mCGun.scene.scale.set(20, 20, 20);
+    // mCGun.scene.rotateY(90);
+    mCGun.scene.rotateY(4.7);
+    mCGun.scene.position.set(-.2, 2.6, 1.2);
+    scene.add(mCGun.scene);
+    
+
+  }, undefined, function (error) {
+
+    console.error(error);
 
   });
   
@@ -510,7 +523,13 @@ function animate() {
     // mainCharacter.scene.translateX(velocity.x * delta);
     
     if (mainCharacter) {
-      
+     
+      // if (count < 0) {
+      //   debugger
+      //   count = 500;
+      // }
+      // count -= 1
+
       mainCharacter.scene.rotation.y += ((velocity.x * delta)/ 10 * -1);
       mainCharacter.scene.position.y += (velocity.y * delta);
       mainCharacter.scene.translateZ(velocity.z * delta * -1);
@@ -518,6 +537,11 @@ function animate() {
       MCShellBody.position.x = mainCharacter.scene.position.x;
       MCShellBody.position.y = mainCharacter.scene.position.y + 10;
       MCShellBody.position.z = mainCharacter.scene.position.z;
+
+      // mCGun.scene.position.x = mainCharacter.scene.position.x;
+      // mCGun.scene.position.y = mainCharacter.scene.position.y + 10;
+      // mCGun.scene.position.z = mainCharacter.scene.position.z;
+      
    
       let mType = "idle";
       if (forward) mType = {type: "forward"};
