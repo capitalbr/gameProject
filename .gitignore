@@ -8,3 +8,5 @@ testing_terrain_copy.js
 test_shooting_copy.js
 test_shooting2_copy.js
 testing_particle.js
+testing_clones.js
+testing_clones_copy.js

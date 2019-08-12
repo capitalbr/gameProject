@@ -1,6 +1,7 @@
 
 import dep from "./import"
-const { THREE, CANNON, PointerLockControls, GLTFLoader, TWEEN } = dep;
+import { create } from "domain";
+const { THREE, CANNON, PointerLockControls, GLTFLoader, TWEEN, SkeletonUtils } = dep;
 let cannonDebugRenderer;
 let count = 5
 
@@ -75,7 +76,10 @@ let tween;
 let dead = false;
 let deadx, deadz;
 let kills = 0;
+let cloneMixers = []; // All the THREE.AnimationMixer objects for all the animations in the scene
+let numLoadedModels = 0;
 //END ENEMIES
+
 
 
 
@@ -213,6 +217,47 @@ const deleteObAddOb = (name, ObToAdd) => {
 }
 
 
+
+// CLONES
+const createClones = (modelToClone, scene) => {
+
+  let tempScene = SkeletonUtils.clone(modelToClone.scene);
+
+  if (tempScene) {
+    // enemyMech.scene.getObjectByName("RootNode")
+
+    let tempMesh = tempScene.getObjectByName("RootNode");
+
+    if (tempMesh) {
+
+      let tempCloneMixer = chooseFirstMotion(tempMesh, modelToClone.animations, "Neck_Mech_Walker_by_3DHaupt|run");
+
+      cloneMixers.push(tempCloneMixer);
+
+    }
+    scene.add(tempScene);
+
+    tempScene.position.set(Math.random() * 10, 0, Math.random() * 10);
+  }
+
+}
+
+const chooseFirstMotion = (tempMesh, animations, name) => {
+
+  let tempMixer2 = new THREE.AnimationMixer(tempMesh);
+  let clip = THREE.AnimationClip.findByName(animations, name);
+
+  if (clip) {
+
+    let tempAction = tempMixer2.clipAction(clip);
+    tempAction.play();
+
+  }
+
+  return tempMixer2;
+
+}
+
 const characterCreator = () => {
  
   let loader = new GLTFLoader().setPath('https://assets-yp9dzdxebv.s3.us-east-2.amazonaws.com/');
@@ -253,7 +298,6 @@ const characterCreator = () => {
     camera.position.set(0, 5.5, 0);
     cameraHolder.add(camera);
     cameraHolder.lookAt(scene.position);
-   
     camera.rotateY(110);
     scene.add(cameraHolder);
    
@@ -304,6 +348,7 @@ const characterCreator = () => {
     enemyMech.scene.position.set(0, 0, 20);
     scene.add(enemyMech.scene);
     
+    // createClones(enemyMech, scene);
 
   }, undefined, function (error) {
 
@@ -361,10 +406,13 @@ const characterCreator = () => {
   scene.add(mirrorSphere);
 }
 
+//END CLONES
+
 
 
 init();
 characterCreator();
+// createClones();
 
 
 
@@ -628,7 +676,7 @@ function animate() {
     // controls.getObject().translateX(velocity.x * delta);
     // controls.getObject().position.y += (velocity.y * delta);
     // controls.getObject().translateZ(velocity.z * delta);
-    // debugger
+    
     // mainCharacter.scene.translateX(velocity.x * delta);
     
     if (mainCharacter) {
@@ -802,6 +850,13 @@ function animate() {
   if (!dead) {
     TWEEN.update();
   }
+
+  for (let i = 0; i < cloneMixers.length; ++i) {
+
+    cloneMixers[i].update(delta2);
+
+  }
+
   updateKills();
   // cannonDebugRenderer.update();
   renderer.render(scene, camera);
@@ -850,7 +905,7 @@ const updateKills = () => {
   //   return angle * (Math.PI / 180);
   // }
   // document.onmousemove = (e) => {
-  //   // debugger
+  
   //   let dMove = {
   //     x: e.offsetX - pmp.x,
   //     y: e.offsetY - pmp.y

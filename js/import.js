@@ -6,6 +6,7 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import { ColladaLoader } from 'three/examples/jsm/loaders/ColladaLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as TWEEN from '@tweenjs/tween.js';
+import { SkeletonUtils } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 /* global CANNON,THREE,Detector */
 
@@ -255,7 +256,8 @@ const dep = {
   FBXLoader,
   ColladaLoader,
   GLTFLoader,
-  TWEEN
+  TWEEN,
+  SkeletonUtils
 }
 
 export default dep;
