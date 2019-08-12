@@ -1,6 +1,6 @@
 
 import dep from "./import"
-const { THREE, CANNON, PointerLockControls, GLTFLoader } = dep;
+const { THREE, CANNON, PointerLockControls, GLTFLoader, TWEEN } = dep;
 let cannonDebugRenderer;
 let count = 5
 
@@ -13,10 +13,11 @@ let velocity2 = new THREE.Vector3();
 let camera, scene, renderer, controls, raycaster;
 
 //TESTING
-let mainCharacter, mainCharacterRunBackwards, mainCharacterStandStill, mCGun;
+let mainCharacter, mainCharacterRunBackwards, mainCharacterStandStill, mCGun,
+  intergalacticShip;
 let mainCharacterStrafe1, mainCharacterStrafe2, mainCharacterGun;
 let clock = new THREE.Clock();
-let mixer, mixerMCRun, mixerMCSS, mixerS1, mixerS2, mixerG;
+let mixer, eMechMixer, mixerMCRun, mixerMCSS, mixerS1, mixerS2, mixerG;
 let mirrorCube, mirrorCubeCamera; 
 let mirrorSphere, mirrorSphereCamera; 
 
@@ -24,7 +25,7 @@ const characters = {};
 let currentCharacter;
 let prevCharacter;
 
-let action;
+let action, eMechAction;
 let mouseDown = false;
 
 let cameraHolder;
@@ -70,6 +71,10 @@ let particleTexture = new THREE.TextureLoader().load('https://assets-yp9dzdxebv.
 
 //ENEMIES
 let enemyMech;
+let tween;
+let dead = false;
+let deadx, deadz;
+let kills = 0;
 //END ENEMIES
 
 
@@ -105,6 +110,18 @@ function initCannon(mainCharacter) {
   EMechShellBody.addShape(eMechShell);
   EMechShellBody.position.set(enemyMech.scene.position.x, enemyMech.scene.position.y, enemyMech.scene.position.z);
   EMechShellBody.linearDamping = 0.9;
+  EMechShellBody.addEventListener("collide", function (e) {
+    if (e.body.boundingRadius === 1.2) {
+      
+     
+      dead = true;
+      deadx = e.contact.bj.position.x;
+      deadz = e.contact.bj.position.z;
+      playClip(enemyMech, "Neck_Mech_Walker_by_3DHaupt|Broken_2", eMechAction, true);
+      kills += 1;
+    }
+    
+  });
   world.add(EMechShellBody);
 
   cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
@@ -270,16 +287,55 @@ const characterCreator = () => {
   loader3.load('Neck_Mech_Walker_by_3DHaupt-(FBX+7.4+binary+mit+Animation).glb', function (gltf) {
     enemyMech = gltf;
     enemyMech.scene.scale.set(2, 2, 2);
+
+    enemyMech.aHash = {};
+    enemyMech.animations.forEach(a => {
+      enemyMech.aHash[a.name] = a;
+    });
+
+    
+    eMechMixer = new THREE.AnimationMixer(enemyMech.scene);
+    eMechAction = eMechMixer.clipAction(enemyMech.aHash["Neck_Mech_Walker_by_3DHaupt|All_Animations"]);
+    eMechAction.play();
+
+
+
     // enemyMech.scene.rotateY(4.7);
-    enemyMech.scene.position.set(0, 0, -20);
+    enemyMech.scene.position.set(0, 0, 20);
     scene.add(enemyMech.scene);
-    debugger
+    
 
   }, undefined, function (error) {
 
     console.error(error);
 
   });
+
+  loader.load('Hades_Carrier.glb', function (gltf) {
+    intergalacticShip = gltf;
+    intergalacticShip.scene.scale.set(6000, 6000, 6000);
+
+    intergalacticShip.aHash = {};
+    intergalacticShip.animations.forEach(a => {
+      intergalacticShip.aHash[a.name] = a;
+    });
+
+    intergalacticShip.scene.rotateY(1.5);
+
+    // eMechMixer = new THREE.AnimationMixer(intergalacticShip.scene);
+    // eMechAction = eMechMixer.clipAction(intergalacticShip.aHash["Neck_Mech_Walker_by_3DHaupt|All_Animations"]);
+    // eMechAction.play();
+
+
+
+    // intergalacticShip.scene.rotateY(4.7);
+    intergalacticShip.scene.position.set(-4000, 50, 100);
+    scene.add(intergalacticShip.scene);
+
+
+  });
+
+
 
 
 
@@ -490,18 +546,47 @@ function onWindowResize() {
 
 }
 
-const playClip = (clip) => {
+const playClip = (entity, clip, actionType, pause) => {
+  let decider;
+  let currentMixer;
   
-  if (action && action._clip.name !== clip) {
-    action.enabled = false;
-    action = mixer.clipAction(mainCharacter.aHash[clip]);
-    action.play();
+  if (actionType === action) {
+    decider = "action"
+    currentMixer = mixer;
   } else {
-    action = mixer.clipAction(mainCharacter.aHash[clip]);
-    action.enabled = true;
-    action.play();
+    
+    decider = "eMechAction"
+    currentMixer = eMechMixer;
   }
-  
+  if (mixer) {
+
+ 
+  }
+  if (actionType && actionType._clip.name !== clip) {
+    actionType.enabled = false;
+    actionType = currentMixer.clipAction(entity.aHash[clip]);
+    // actionType.play();
+  } else {
+    actionType = currentMixer.clipAction(entity.aHash[clip]);
+    actionType.enabled = true;
+    // actionType.play();
+  }
+  if (decider === "action") {
+    action = actionType;
+    if (pause) {
+      action.setLoop(THREE.LoopOnce);
+      eMechAction.clampWhenFinished = true;
+    }
+    action.play()
+  } else {
+    eMechAction = actionType;
+    if (pause) {
+      eMechAction.setLoop(THREE.LoopOnce);
+      eMechAction.clampWhenFinished = true;
+    }
+    eMechAction.play();
+  }
+
 }
 
 
@@ -574,28 +659,28 @@ function animate() {
       if (strafeR) mType = {type: "strafeR"};
       switch (mType.type) {
         case "forward":
-          playClip("Run");
+          playClip(mainCharacter, "Run", action);
           break;
         case "back":
-          playClip("RunBackwards");
+          playClip(mainCharacter, "RunBackwards", action);
           break;
         case "left":
-          playClip("StrafeLeft");
+          playClip(mainCharacter, "StrafeLeft", action);
           break;
         case "right":
-          playClip("Strafe2");
+          playClip(mainCharacter, "Strafe2", action);
           break;
         case "strafeL":
-          playClip("StrafeLeft");
+          playClip(mainCharacter, "StrafeLeft", action);
           break;
         case "strafeR":
-          playClip("Strafe2");
+          playClip(mainCharacter, "Strafe2", action);
           break;
         default:
           if (mouseDown) {
-            playClip("GunPlay")
+            playClip(mainCharacter, "GunPlay", action)
           } else {
-            playClip("Idle")
+            playClip(mainCharacter, "Idle", action)
           }
 
       }
@@ -611,7 +696,7 @@ function animate() {
     // let mcq = mainCharacter.quaternion.w;
 
 
-    if (mainCharacter.scene.position.y < 0) {
+    if (mainCharacter && mainCharacter.scene.position.y < 0) {
 
       velocity.y = 0;
       mainCharacter.scene.position.y = 0;
@@ -625,9 +710,57 @@ function animate() {
     }
 
     if (enemyMech) {
+      
+      if (count < -100 && !dead) {
+        tween = new TWEEN.Tween(enemyMech.scene.position)
+          .to(mainCharacter.scene.position, 1400)
+          .start();
+      } else {
+        if (tween){
+          tween.stop();
+          enemyMech.scene.position.x = deadx;
+          enemyMech.scene.position.z = deadz;
+        }
+      }
+      count -= 1
+
+      // tween = new TWEEN.Tween(EMechShellBody.position)
+      //   .to(mainCharacter.scene.position, 1400)
+      //   .start();
+
+      
       EMechShellBody.position.x = enemyMech.scene.position.x;
       EMechShellBody.position.y = enemyMech.scene.position.y + 10;
       EMechShellBody.position.z = enemyMech.scene.position.z;
+
+      // enemyMech.scene.position.x = EMechShellBody.position.x;
+      // enemyMech.scene.position.y = EMechShellBody.position.y;
+      // enemyMech.scene.position.z = EMechShellBody.position.z;
+
+      if (!dead) {
+        playClip(enemyMech, "Neck_Mech_Walker_by_3DHaupt|run", eMechAction);
+      } else {
+        if (!enemyMech.deadCount) {
+          enemyMech.deadCount = 100;
+        }
+        enemyMech.deadCount -= 1;
+        if (enemyMech.deadCount === 0) {
+          scene.remove(enemyMech.scene);
+          world.remove(EMechShellBody);
+        }
+      }
+    }
+
+    if (intergalacticShip) {
+       let dateOrbit = Date.now() * 0.0001;
+      // intergalacticShip.scene.position.set(
+      //   Math.cos(dateOrbit) * 300,
+      //   100,
+      //   Math.sin(dateOrbit) * 300
+      // );
+      intergalacticShip.scene.position.x += 2;
+      intergalacticShip.scene.position.y = 100;
+      intergalacticShip.scene.position.z = 300;
     }
 
     lastTime = time;
@@ -639,6 +772,7 @@ function animate() {
   let delta2 = clock.getDelta();
 
   if (mixer) mixer.update(delta2);
+  if (eMechMixer) eMechMixer.update(delta2);
 
 
   // REFLECTIVE OBJECTS
@@ -653,7 +787,9 @@ function animate() {
 
 
   //CANNON
-  world.step(dt);
+  if (world) {
+    world.step(dt);
+  }
 
   // Update ball positions
   for (let i = 0; i < projectiles.length; i++) {
@@ -663,9 +799,11 @@ function animate() {
   }
   //END CANNON
 
-
-  cannonDebugRenderer.update();
-  // renderer.render(scene, camera);
+  if (!dead) {
+    TWEEN.update();
+  }
+  updateKills();
+  // cannonDebugRenderer.update();
   renderer.render(scene, camera);
 }
 
@@ -693,6 +831,11 @@ const updateParticles = (energyBlast) => {
   energyBlast.rotation.y = timeForEBlast * 0.75;
 	energyBlast.rotation.z = timeForEBlast * 1.0;
   
+}
+
+const updateKills = () => {
+  let hud = document.getElementById("hud");
+  hud.innerText = `${kills}`;
 }
  // ALTERNATIVE POINTER ROTATE OBJECT
  // HAS TWO METHODS NOW ONE FOR CAMERA ROTATION NOT FINISHED

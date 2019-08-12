@@ -5,6 +5,7 @@ import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockCont
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import { ColladaLoader } from 'three/examples/jsm/loaders/ColladaLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import * as TWEEN from '@tweenjs/tween.js';
 
 /* global CANNON,THREE,Detector */
 
@@ -253,7 +254,8 @@ const dep = {
   PointerLockControls,
   FBXLoader,
   ColladaLoader,
-  GLTFLoader
+  GLTFLoader,
+  TWEEN
 }
 
 export default dep;
