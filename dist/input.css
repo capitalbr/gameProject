@@ -1,0 +1,12 @@
+#hud{
+  position: absolute;
+  top: 0px;
+  width: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+  text-align: center;
+  user-select: none;
+  z-index: 1;
+  color: white;
+  font-size: 40px;
+}
