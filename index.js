@@ -1,5 +1,5 @@
-import "./js/game_main";
-
+// import "./js/game_main";
+import "./js/main"
 
 // TESTING
 // import "./js/game";

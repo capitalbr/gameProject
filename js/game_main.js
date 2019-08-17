@@ -621,10 +621,6 @@ const playClip = (entity, clip, actionType, pause) => {
   }
   if (decider === "action") {
     action = actionType;
-    if (pause) {
-      action.setLoop(THREE.LoopOnce);
-      eMechAction.clampWhenFinished = true;
-    }
     action.play()
   } else {
     eMechAction = actionType;
@@ -657,7 +653,6 @@ function animate() {
 
     let time = performance.now();
     let delta = (time - lastTime) / 1000;
-
     velocity.x -= velocity.x * 10.0 * delta;
     velocity2.x -= velocity2.x * 10.0 * delta;
     velocity.z -= velocity.z * 10.0 * delta;
