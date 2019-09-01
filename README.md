@@ -1,15 +1,5 @@
-# 🚀 Welcome to your new awesome project!
+# 🚀 gameProject
 
-This project has been created using **webpack scaffold**, you can now run
+This project is a first person shooter built on WebGL, Three.js, Cannon.js and React.
 
-```
-npm run build
-```
-
-or
-
-```
-yarn build
-```
-
-to bundle your application
+Full readme coming soon.
